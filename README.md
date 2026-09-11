@@ -1,4 +1,4 @@
-# 🎮 Steam Game Rating Prediction & SHAP Explainability Pipeline
+# Steam Game Rating Prediction & SHAP Explainability Pipeline
 
 [![Python Version](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.14-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -11,7 +11,7 @@ An end-to-end Machine Learning and interpretability pipeline that scrapes **2,50
 
 ---
 
-## 🌟 Interactive Showcase Dashboard
+## Interactive Showcase Dashboard
 
 This repository includes a standalone, responsive web dashboard (`index.html`) featuring:
 - **Interactive Rating Simulator**: Adjust game price, concurrent players (CCU), playtime, and toggle community tags to observe real-time predicted rating probabilities powered by learned SHAP weights.
@@ -28,7 +28,7 @@ python -m http.server 8000
 
 ---
 
-## 🏗️ Architecture Pipeline
+## Architecture Pipeline
 
 ```mermaid
 flowchart LR
@@ -40,7 +40,7 @@ flowchart LR
 
 ---
 
-## 📊 Benchmark Results (500 Holdout Test Games)
+## Benchmark Results (500 Holdout Test Games)
 
 All models were evaluated on a stratified 20% holdout test set (444 positive, 56 non-positive) ensuring zero data leakage:
 
@@ -54,7 +54,7 @@ All models were evaluated on a stratified 20% holdout test set (444 positive, 56
 
 ---
 
-## 🔬 Key SHAP Explainability Discoveries
+## Key SHAP Explainability Discoveries
 
 1. **The "Indie" Goodwill Advantage**:
    - `genre_Indie` and `tag_Indie` exert a strong positive push on rating probability (mean $|SHAP| = 0.263$).
@@ -62,17 +62,17 @@ All models were evaluated on a stratified 20% holdout test set (444 positive, 56
 2. **Pricing & Value Dynamics**:
    - `price`, `initial_price`, and `price_per_hour_playtime` are among the top 4 global decision drivers.
    - **Free-to-Play vulnerability**: Free games suffer from negative rating drag due to aggressive monetization, smurfing, and battle pass fatigue.
-   - **The $10–$30 sweet spot**: Mid-priced titles that deliver substantial playtime per dollar show consistently positive Shapley contributions.
+   - **The $10-$30 sweet spot**: Mid-priced titles that deliver substantial playtime per dollar show consistently positive Shapley contributions.
 3. **The Multiplayer Review Penalty**:
    - `tag_Multiplayer` and `tag_PvP` carry a net negative bias unless buffered by high concurrent player volume (`log_ccu`), reflecting community grievances over server latency, cheat detection, and matchmaking.
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 steam_project/
-├── index.html                        # Interactive showcase dashboard
+├── index.html                        # Interactive showcase dashboard (minimalist black theme)
 ├── requirements.txt                  # Python dependencies
 ├── README.md                         # Project documentation
 ├── data/
@@ -115,12 +115,12 @@ steam_project/
 
 ---
 
-## 🚀 Quickstart & Reproduction
+## Quickstart & Reproduction
 
 ### 1. Installation
 Clone the repository and install the dependencies:
 ```bash
-git clone https://github.com/<USERNAME>/<REPO>.git
+git clone https://github.com/SweetGiraffo/steam-rating-prediction.git
 cd steam_project
 pip install -r requirements.txt
 ```
@@ -147,5 +147,5 @@ python -m src.explain
 
 ---
 
-## ⚖️ License
+## License
 Distributed under the MIT License. See `LICENSE` for details.
