@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Steam Game Rating Prediction & SHAP Explainability Dashboard</title>
+  <meta name="description" content="End-to-End Machine Learning Pipeline: 2,500+ Steam Games Scraped, Cleaned, Engineered, Modeled (XGBoost 0.884 ROC-AUC) and Explained via SHAP." />
+  <style>
+    :root {
+      --bg-dark: #0b0f19;
+      --bg-card: #131b2e;
+      --bg-card-hover: #19243d;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-accent: rgba(26, 159, 255, 0.3);
+      --primary: #1a9fff;
+      --primary-glow: rgba(26, 159, 255, 0.25);
+      --accent: #00f0aa;
+      --accent-glow: rgba(0, 240, 170, 0.25);
+      --purple: #a855f7;
+      --red: #ef4444;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+
+    /* Top Navbar */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(14px);
+      background: rgba(11, 15, 25, 0.85);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+      color: white;
+      padding: 0.2rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    nav {
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+
+    nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    nav a:hover {
+      color: var(--primary);
+    }
+
+    .btn-github {
+      background: #1e293b;
+      color: var(--text);
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .btn-github:hover {
+      background: #334155;
+      border-color: var(--primary);
+      color: white;
+    }
+
+    /* Container */
+    .container {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem;
+    }
+
+    /* Hero Section */
+    .hero {
+      text-align: center;
+      padding: 4rem 1rem 3rem;
+      position: relative;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 1.25rem;
+      letter-spacing: -0.03em;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #60a5fa 0%, #a855f7 50%, #00f0aa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      color: var(--text-muted);
+      font-size: 1.15rem;
+      max-width: 760px;
+      margin: 0 auto 2.5rem;
+    }
+
+    /* Stat Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 3.5rem;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      border-radius: 12px;
+      text-align: left;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-3px);
+      border-color: var(--border-accent);
+    }
+
+    .stat-number {
+      font-size: 2.2rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-card:nth-child(1) .stat-number { color: var(--primary); }
+    .stat-card:nth-child(2) .stat-number { color: var(--accent); }
+    .stat-card:nth-child(3) .stat-number { color: var(--purple); }
+    .stat-card:nth-child(4) .stat-number { color: #f59e0b; }
+    .stat-card:nth-child(5) .stat-number { color: #ec4899; }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-sub {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-top: 0.35rem;
+    }
+
+    /* Pipeline Timeline */
+    .pipeline-flow {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 1rem;
+      margin: 2.5rem 0 4rem;
+    }
+
+    .flow-step {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      position: relative;
+    }
+
+    .step-badge {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .step-title {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+    }
+
+    .step-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    /* Section Styles */
+    section {
+      margin-bottom: 5rem;
+      scroll-margin-top: 5rem;
+    }
+
+    .section-header {
+      margin-bottom: 2rem;
+    }
+
+    .section-tag {
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      display: block;
+      margin-bottom: 0.35rem;
+    }
+
+    .section-title {
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .section-desc {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      margin-top: 0.5rem;
+      max-width: 800px;
+    }
+
+    /* Card Panels */
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    /* Image Cards */
+    .fig-card {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.2s;
+    }
+
+    .fig-card:hover {
+      border-color: var(--border-accent);
+      transform: translateY(-2px);
+    }
+
+    .fig-card img {
+      width: 100%;
+      height: auto;
+      display: block;
+      background: #000;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+
+    .fig-caption {
+      padding: 1rem 1.25rem;
+    }
+
+    .fig-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .fig-text {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+
+    th {
+      background: #1e293b;
+      color: #cbd5e1;
+      padding: 0.85rem 1rem;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: #e2e8f0;
+    }
+
+    tr:nth-child(even) {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    tr:hover {
+      background: rgba(26, 159, 255, 0.06);
+    }
+
+    .badge-win {
+      background: rgba(0, 240, 170, 0.15);
+      color: var(--accent);
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.8rem;
+    }
+
+    /* Interactive Simulator */
+    .simulator {
+      background: linear-gradient(135deg, rgba(26, 159, 255, 0.05), rgba(168, 85, 247, 0.05));
+      border: 1px solid var(--border-accent);
+      border-radius: 16px;
+      padding: 2.5rem;
+    }
+
+    .sim-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 2.5rem;
+      margin-top: 1.5rem;
+    }
+
+    @media (max-width: 840px) {
+      .sim-grid { grid-template-columns: 1fr; }
+    }
+
+    .control-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .control-label {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .control-value {
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      background: #334155;
+      border-radius: 3px;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      box-shadow: 0 0 10px var(--primary);
+    }
+
+    .tags-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .tag-btn {
+      background: #1e293b;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 0.35rem 0.8rem;
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tag-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+
+    .sim-result {
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .prob-gauge {
+      font-size: 3.5rem;
+      font-weight: 900;
+      line-height: 1;
+      margin: 1rem 0 0.5rem;
+      letter-spacing: -0.04em;
+    }
+
+    .prob-verdict {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .shap-factors {
+      width: 100%;
+      text-align: left;
+      margin-top: 1rem;
+      border-top: 1px solid var(--border);
+      padding-top: 1rem;
+      font-size: 0.82rem;
+    }
+
+    .factor-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.4rem;
+    }
+
+    .factor-pos { color: var(--accent); font-weight: 700; }
+    .factor-neg { color: var(--red); font-weight: 700; }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 200;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .modal img {
+      max-width: 92vw;
+      max-height: 88vh;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 1.5rem;
+      right: 2rem;
+      color: white;
+      font-size: 2rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 3rem 1.5rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    footer a { color: var(--primary); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header>
+    <a href="#" class="brand">
+      <span>SteamPulse ML</span>
+      <span class="brand-badge">SHAP Explained</span>
+    </a>
+    <nav>
+      <a href="#acquisition">Acquisition</a>
+      <a href="#eda">EDA</a>
+      <a href="#features">Features</a>
+      <a href="#models">Models</a>
+      <a href="#shap">SHAP Insights</a>
+      <a href="#simulator">Simulator</a>
+      <a href="https://github.com" target="_blank" class="btn-github">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </nav>
+  </header>
+
+  <div class="container">
+
+    <!-- Hero -->
+    <div class="hero">
+      <h1>Predicting Steam Game Ratings with <span class="gradient-text">Tree Ensembles & SHAP</span></h1>
+      <p>An end-to-end Machine Learning and interpretability pipeline built on 2,500+ scraped Steam games. Uncovering the exact pricing, genre, and community tag dynamics driving player sentiment.</p>
+
+      <!-- Stat Cards -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number">2,500</div>
+          <div class="stat-label">Games Scraped</div>
+          <div class="stat-sub">Enriched with 434 community tags</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">0.884</div>
+          <div class="stat-label">XGBoost ROC-AUC</div>
+          <div class="stat-sub">Top discrimination benchmark</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">0.902</div>
+          <div class="stat-label">Random Forest F1</div>
+          <div class="stat-sub">Weighted F1 (90.0% accuracy)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">60</div>
+          <div class="stat-label">Curated Features</div>
+          <div class="stat-sub">Variance pruned & selected</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">7.9 : 1</div>
+          <div class="stat-label">Class Imbalance</div>
+          <div class="stat-sub">88.8% positive vs 11.2% non-pos</div>
+        </div>
+      </div>
+
+      <!-- Pipeline Steps Flow -->
+      <div class="pipeline-flow">
+        <div class="flow-step">
+          <span class="step-badge">Phase 1</span>
+          <div class="step-title">Data Acquisition</div>
+          <div class="step-desc">Multi-threaded SteamSpy scraper with checkpointing.</div>
+        </div>
+        <div class="flow-step">
+          <span class="step-badge">Phase 2</span>
+          <div class="step-title">Cleaning & EDA</div>
+          <div class="step-desc">Target formulation (&gt;70% positive) &amp; noise filtering.</div>
+        </div>
+        <div class="flow-step">
+          <span class="step-badge">Phase 3</span>
+          <div class="step-title">Feature Engineering</div>
+          <div class="step-desc">MultiLabelBinarizer, value ratios &amp; variance selection.</div>
+        </div>
+        <div class="flow-step">
+          <span class="step-badge">Phase 4</span>
+          <div class="step-title">Modeling &amp; Benchmark</div>
+          <div class="step-desc">Logistic Reg, Random Forest, and tuned XGBoost.</div>
+        </div>
+        <div class="flow-step">
+          <span class="step-badge">Phase 5</span>
+          <div class="step-title">SHAP Interpretability</div>
+          <div class="step-desc">TreeExplainer summary &amp; dependence interactions.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 1: Data Acquisition -->
+    <section id="acquisition">
+      <div class="section-header">
+        <span class="section-tag">Phase 1</span>
+        <h2 class="section-title">Data Acquisition &amp; Catalog Extraction</h2>
+        <p class="section-desc">We collected 2,500+ active Steam games with extensive metadata from the SteamSpy API using multi-threaded polite rate-limiting, exponential backoff, and continuous atomic disk checkpointing.</p>
+      </div>
+
+      <div class="panel">
+        <h3 style="margin-bottom: 1rem; font-size: 1.15rem;">Sample Extracted Game Records</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>AppID</th>
+                <th>Title</th>
+                <th>Developer</th>
+                <th>Price</th>
+                <th>Positive Reviews</th>
+                <th>Total Reviews</th>
+                <th>Rating %</th>
+                <th>Target</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>730</td>
+                <td><strong>Counter-Strike: Global Offensive</strong></td>
+                <td>Valve</td>
+                <td>Free</td>
+                <td>7,642,084</td>
+                <td>8,815,087</td>
+                <td>86.7%</td>
+                <td><span class="badge-win">1 (High)</span></td>
+              </tr>
+              <tr>
+                <td>1172470</td>
+                <td><strong>Apex Legends</strong></td>
+                <td>Respawn</td>
+                <td>Free</td>
+                <td>668,053</td>
+                <td>994,979</td>
+                <td>67.1%</td>
+                <td><span style="color: var(--red); font-weight: 700;">0 (Low)</span></td>
+              </tr>
+              <tr>
+                <td>2358720</td>
+                <td><strong>Black Myth: Wukong</strong></td>
+                <td>Game Science</td>
+                <td>$59.99</td>
+                <td>1,111,720</td>
+                <td>1,150,098</td>
+                <td>96.7%</td>
+                <td><span class="badge-win">1 (High)</span></td>
+              </tr>
+              <tr>
+                <td>271590</td>
+                <td><strong>Grand Theft Auto V</strong></td>
+                <td>Rockstar North</td>
+                <td>Free tier / Paid</td>
+                <td>1,739,980</td>
+                <td>1,990,556</td>
+                <td>87.4%</td>
+                <td><span class="badge-win">1 (High)</span></td>
+              </tr>
+              <tr>
+                <td>1245620</td>
+                <td><strong>ELDEN RING</strong></td>
+                <td>FromSoftware</td>
+                <td>$59.99</td>
+                <td>981,540</td>
+                <td>1,056,677</td>
+                <td>92.9%</td>
+                <td><span class="badge-win">1 (High)</span></td>
+              </tr>
+              <tr>
+                <td>105600</td>
+                <td><strong>Terraria</strong></td>
+                <td>Re-Logic</td>
+                <td>$9.99</td>
+                <td>1,373,979</td>
+                <td>1,409,473</td>
+                <td>97.5%</td>
+                <td><span class="badge-win">1 (High)</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHASE 2: EDA -->
+    <section id="eda">
+      <div class="section-header">
+        <span class="section-tag">Phase 2</span>
+        <h2 class="section-title">Data Cleaning &amp; Exploratory Analysis</h2>
+        <p class="section-desc">Profiling the rating landscape: discovering extreme positive skew (88.8% vs 11.2%), the paid-vs-free rating gap, and key genre/tag correlations.</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="fig-card">
+          <img src="./reports/figures/target_distribution.png" alt="Target Distribution" onclick="openModal(this.src)" />
+          <div class="fig-caption">
+            <div class="fig-title">Target Class Balance (7.9 : 1 Imbalance)</div>
+            <div class="fig-text">88.8% of active games hold &gt;70% positive ratings. Requires balanced weighting to avoid majority-class collapse.</div>
+          </div>
+        </div>
+
+        <div class="fig-card">
+          <img src="./reports/figures/rating_vs_price.png" alt="Rating vs Price" onclick="openModal(this.src)" />
+          <div class="fig-caption">
+            <div class="fig-title">Pricing Dynamics &amp; High-Rating Rate</div>
+            <div class="fig-text">Paid games achieve 92.0% high ratings vs. 74.7% for Free-to-Play, which suffer from smurfing and monetization reviews.</div>
+          </div>
+        </div>
+
+        <div class="fig-card">
+          <img src="./reports/figures/top_tags.png" alt="Top Tags" onclick="openModal(this.src)" />
+          <div class="fig-caption">
+            <div class="fig-title">Top 20 Tags and Rating Success</div>
+            <div class="fig-text">"Indie" (94.0%) and "Story Rich" (93.4%) strongly push sentiment upwards, whereas "Multiplayer" drops to 83.2%.</div>
+          </div>
+        </div>
+
+        <div class="fig-card">
+          <img src="./reports/figures/top_genres.png" alt="Top Genres" onclick="openModal(this.src)" />
+          <div class="fig-caption">
+            <div class="fig-title">Genre Proportions &amp; Rating Rates</div>
+            <div class="fig-text">Indie and Adventure lead in rating percentage, while competitive MMO and pure Action show greater review dispersion.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHASE 3: Feature Engineering -->
+    <section id="features">
+      <div class="section-header">
+        <span class="section-tag">Phase 3</span>
+        <h2 class="section-title">Feature Engineering &amp; Selection</h2>
+        <p class="section-desc">Transforming raw multilabel text and raw counters into 474 features, pruning 192 low-variance tags, and curating the top 60 predictors with zero data leakage.</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="panel">
+          <h3 style="margin-bottom: 1rem; font-size: 1.15rem;">Derived Domain Metrics</h3>
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 0.85rem; font-size: 0.9rem;">
+            <li><strong style="color: var(--primary);">price_per_hour_playtime:</strong> Value proposition metric: <code>price / (playtime_hours + 1)</code>.</li>
+            <li><strong style="color: var(--primary);">engagement_rate:</strong> Ratio of total review volume to estimated owner midpoint.</li>
+            <li><strong style="color: var(--primary);">discount_percentage:</strong> Normalized promotional discount proportion.</li>
+            <li><strong style="color: var(--primary);">ccu_to_owners_ratio:</strong> Concurrent active player ratio relative to total installs.</li>
+            <li><strong style="color: var(--primary);">MultiLabel Encoding:</strong> One-hot matrices across 434 tags and 24 genres.</li>
+            <li><strong style="color: var(--accent);">VarianceThreshold (0.01):</strong> Pruned tags used in &lt;1% of games (&lt;25 titles) to prevent sparse matrix degradation.</li>
+          </ul>
+        </div>
+
+        <div class="fig-card">
+          <img src="./reports/figures/feature_importance_preliminary.png" alt="Preliminary Feature Importance" onclick="openModal(this.src)" />
+          <div class="fig-caption">
+            <div class="fig-title">Preliminary Top Feature Importances</div>
+            <div class="fig-text">Initial Random Forest Gini ranking identifying log_ccu, price, tag_Multiplayer, and genre_Indie as primary split candidates.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHASE 4: Modeling -->
+    <section id="models">
+      <div class="section-header">
+        <span class="section-tag">Phase 4</span>
+        <h2 class="section-title">Model Training &amp; Benchmark Evaluation</h2>
+        <p class="section-desc">Comparing Logistic Regression, Random Forest, and XGBoost on a stratified 20% holdout test set (500 games) using F1-score and ROC-AUC.</p>
+      </div>
+
+      <div class="panel">
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Accuracy</th>
+                <th>Positive F1</th>
+                <th>Minority Class F1</th>
+                <th>Weighted F1</th>
+                <th>Macro F1</th>
+                <th>ROC-AUC</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Logistic Regression</strong> (Balanced, Scaled)</td>
+                <td>78.0%</td>
+                <td>0.8635</td>
+                <td>0.4330</td>
+                <td>0.8153</td>
+                <td>0.6483</td>
+                <td>0.8598</td>
+              </tr>
+              <tr>
+                <td><strong>Random Forest</strong> (250 Trees, Balanced)</td>
+                <td><strong>90.0%</strong></td>
+                <td><strong>0.9434</strong></td>
+                <td><strong>0.5686</strong></td>
+                <td><span class="badge-win">0.9015</span></td>
+                <td><strong>0.7560</strong></td>
+                <td>0.8804</td>
+              </tr>
+              <tr>
+                <td><strong>XGBoost Classifier</strong> (Tuned Weights)</td>
+                <td>87.8%</td>
+                <td>0.9306</td>
+                <td>0.4960</td>
+                <td><span class="badge-win">0.8819</span></td>
+                <td>0.7132</td>
+                <td><span class="badge-win">0.8844</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="fig-card">
+          <img src="./reports/figures/confusion_matrices.png" alt="Confusion Matrices" onclick="openModal(this.src)" />
+          <div class="fig-caption">
+            <div class="fig-title">Confusion Matrices (500 Test Games)</div>
+            <div class="fig-text">Random Forest and XGBoost successfully identify minority-class games (&le;70%) without sacrificing majority-class precision.</div>
+          </div>
+        </div>
+
+        <div class="fig-card">
+          <img src="./reports/figures/roc_curves.png" alt="ROC Curves" onclick="openModal(this.src)" />
+          <div class="fig-caption">
+            <div class="fig-title">ROC Curves Comparison</div>
+            <div class="fig-text">XGBoost leads discrimination with 0.884 AUC, closely followed by Random Forest (0.880 AUC).</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PHASE 5: SHAP Analysis -->
+    <section id="shap">
+      <div class="section-header">
+        <span class="section-tag">Phase 5</span>
+        <h2 class="section-title">SHAP Explainability &amp; Feature Dynamics</h2>
+        <p class="section-desc">Using Shapley Additive exPlanations (TreeExplainer) to peer inside the XGBoost model and reveal what drives positive community sentiment.</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="fig-card">
+          <img src="./reports/figures/shap_summary_beeswarm.png" alt="SHAP Beeswarm" onclick="openModal(this.src)" />
+          <div class="fig-caption">
+            <div class="fig-title">SHAP Global Beeswarm Summary</div>
+            <div class="fig-text">Red indicates high feature value; blue low value. Notice how high CCU and Indie tag pull points to the right (positive).</div>
+          </div>
+        </div>
+
+        <div class="fig-card">
+          <img src="./reports/figures/shap_feature_importance.png" alt="SHAP Feature Importance" onclick="openModal(this.src)" />
+          <div class="fig-caption">
+            <div class="fig-title">Mean Absolute SHAP Value Ranking</div>
+            <div class="fig-text">log_ccu, initial_price, tag_Multiplayer, price_per_hour, and tag_Indie are the 5 strongest decision drivers.</div>
+          </div>
+        </div>
+      </div>
+
+      <h3 style="margin: 2.5rem 0 1.25rem; font-size: 1.3rem;">Interaction &amp; Dependence Plots</h3>
+      <div class="grid-3">
+        <div class="fig-card">
+          <img src="./reports/figures/shap_dependence_price.png" alt="SHAP Dependence Price" onclick="openModal(this.src)" />
+          <div class="fig-caption">
+            <div class="fig-title">Price vs. Rating Impact</div>
+            <div class="fig-text">Free-to-play games ($0) face negative SHAP drag; premium pricing ($20-$60) boosts rating when playtime ratio is healthy.</div>
+          </div>
+        </div>
+
+        <div class="fig-card">
+          <img src="./reports/figures/shap_dependence_indie.png" alt="SHAP Dependence Indie" onclick="openModal(this.src)" />
+          <div class="fig-caption">
+            <div class="fig-title">Indie Genre Lift</div>
+            <div class="fig-text">Indie titles receive an immediate positive SHAP boost (+0.26 mean |SHAP|), reflecting community goodwill and creative appeal.</div>
+          </div>
+        </div>
+
+        <div class="fig-card">
+          <img src="./reports/figures/shap_dependence_multiplayer.png" alt="SHAP Dependence Multiplayer" onclick="openModal(this.src)" />
+          <div class="fig-caption">
+            <div class="fig-title">Multiplayer Review Penalty</div>
+            <div class="fig-text">Multiplayer games suffer negative rating drag unless concurrent player volume (log_ccu) is high enough to sustain queues.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- INTERACTIVE SIMULATOR -->
+    <section id="simulator">
+      <div class="section-header">
+        <span class="section-tag">Interactive Widget</span>
+        <h2 class="section-title">Steam Game Rating Simulator</h2>
+        <p class="section-desc">Adjust game characteristics below to observe the predicted high-rating probability (&gt;70% positive) powered by the learned model feature weights.</p>
+      </div>
+
+      <div class="simulator">
+        <div class="sim-grid">
+          <div>
+            <!-- Controls -->
+            <div class="control-group">
+              <div class="control-label">
+                <span>Base Price</span>
+                <span id="val-price" class="control-value">$19.99</span>
+              </div>
+              <input type="range" id="input-price" min="0" max="70" step="5" value="20" oninput="updateSim()" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span>Concurrent Players (Peak CCU)</span>
+                <span id="val-ccu" class="control-value">2,500 CCU</span>
+              </div>
+              <input type="range" id="input-ccu" min="10" max="50000" step="250" value="2500" oninput="updateSim()" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-label">
+                <span>Average Playtime per Player</span>
+                <span id="val-playtime" class="control-value">15.0 Hours</span>
+              </div>
+              <input type="range" id="input-playtime" min="1" max="100" step="2" value="15" oninput="updateSim()" />
+            </div>
+
+            <div class="control-group">
+              <div class="control-label" style="margin-bottom: 0.75rem;">
+                <span>Community Tags &amp; Genre Attributes</span>
+              </div>
+              <div class="tags-picker">
+                <button type="button" class="tag-btn active" data-tag="Indie" onclick="toggleTag(this)">Indie</button>
+                <button type="button" class="tag-btn" data-tag="Multiplayer" onclick="toggleTag(this)">Multiplayer</button>
+                <button type="button" class="tag-btn active" data-tag="Story_Rich" onclick="toggleTag(this)">Story Rich</button>
+                <button type="button" class="tag-btn active" data-tag="2D" onclick="toggleTag(this)">2D</button>
+                <button type="button" class="tag-btn" data-tag="PvP" onclick="toggleTag(this)">PvP</button>
+                <button type="button" class="tag-btn" data-tag="MMO" onclick="toggleTag(this)">Massively Multiplayer</button>
+                <button type="button" class="tag-btn" data-tag="Discount" onclick="toggleTag(this)">On Discount</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Result Gauge -->
+          <div class="sim-result">
+            <span style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 700;">Predicted Rating Probability</span>
+            <div id="prob-display" class="prob-gauge" style="color: var(--accent);">91%</div>
+            <div id="verdict-display" class="prob-verdict" style="color: var(--accent);">Likely Very Positive (&gt;70%)</div>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Based on XGBoost learned Shapley feature coefficients.</p>
+
+            <div class="shap-factors">
+              <div style="font-weight: 700; margin-bottom: 0.5rem; color: #cbd5e1;">Top Influencing Factors:</div>
+              <div id="factor-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Modal for Figure Zoom -->
+  <div id="imageModal" class="modal" onclick="closeModal()">
+    <span class="modal-close">&times;</span>
+    <img id="modalImg" src="" alt="Zoomed Figure" />
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>Steam Games ML Rating &amp; SHAP Explainability Project &bull; Built with Python, Scikit-Learn, XGBoost, and SHAP.</p>
+    <p style="margin-top: 0.5rem; font-size: 0.8rem;">Dataset scraped from SteamSpy API &bull; Evaluated on 2,500 titles.</p>
+  </footer>
+
+  <script>
+    function openModal(src) {
+      document.getElementById('modalImg').src = src;
+      document.getElementById('imageModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('imageModal').style.display = 'none';
+    }
+
+    // Interactive Simulator Script
+    const selectedTags = new Set(['Indie', 'Story_Rich', '2D']);
+
+    function toggleTag(btn) {
+      const tag = btn.getAttribute('data-tag');
+      if (selectedTags.has(tag)) {
+        selectedTags.delete(tag);
+        btn.classList.remove('active');
+      } else {
+        selectedTags.add(tag);
+        btn.classList.add('active');
+      }
+      updateSim();
+    }
+
+    function updateSim() {
+      const price = parseFloat(document.getElementById('input-price').value);
+      const ccu = parseFloat(document.getElementById('input-ccu').value);
+      const playtime = parseFloat(document.getElementById('input-playtime').value);
+
+      document.getElementById('val-price').textContent = price === 0 ? 'Free-to-Play' : '$' + price.toFixed(2);
+      document.getElementById('val-ccu').textContent = ccu.toLocaleString() + ' CCU';
+      document.getElementById('val-playtime').textContent = playtime.toFixed(1) + ' Hours';
+
+      // Base log-odds (baseline prior ~88% in dataset)
+      let logOdds = 1.95;
+      const factors = [];
+
+      // CCU effect (log scale)
+      const ccuEffect = (Math.log10(ccu + 1) - 2.5) * 0.48;
+      logOdds += ccuEffect;
+      factors.push({ name: 'Concurrency (CCU)', val: ccuEffect });
+
+      // Price effect
+      let priceEffect = 0;
+      if (price === 0) {
+        priceEffect = -0.55; // Free-to-play drag
+      } else if (price >= 10 && price <= 40) {
+        priceEffect = 0.35; // Premium value sweet-spot
+      } else {
+        priceEffect = 0.15;
+      }
+      logOdds += priceEffect;
+      factors.push({ name: 'Price Model (' + (price === 0 ? 'F2P' : '$' + price) + ')', val: priceEffect });
+
+      // Playtime per dollar
+      const pph = price / (playtime + 1);
+      let pphEffect = 0;
+      if (pph < 1.0) {
+        pphEffect = 0.25; // Great value
+      } else if (pph > 3.0) {
+        pphEffect = -0.30; // Poor value per hour
+      }
+      logOdds += pphEffect;
+      factors.push({ name: 'Playtime Value ($/hr)', val: pphEffect });
+
+      // Tag Effects based on SHAP findings
+      if (selectedTags.has('Indie')) {
+        logOdds += 0.45;
+        factors.push({ name: 'Tag: Indie', val: 0.45 });
+      }
+      if (selectedTags.has('Story_Rich')) {
+        logOdds += 0.35;
+        factors.push({ name: 'Tag: Story Rich', val: 0.35 });
+      }
+      if (selectedTags.has('2D')) {
+        logOdds += 0.30;
+        factors.push({ name: 'Tag: 2D', val: 0.30 });
+      }
+      if (selectedTags.has('Multiplayer')) {
+        const mpPenalty = ccu < 5000 ? -0.50 : 0.10;
+        logOdds += mpPenalty;
+        factors.push({ name: 'Tag: Multiplayer', val: mpPenalty });
+      }
+      if (selectedTags.has('PvP')) {
+        logOdds -= 0.35;
+        factors.push({ name: 'Tag: PvP', val: -0.35 });
+      }
+      if (selectedTags.has('MMO')) {
+        logOdds -= 0.40;
+        factors.push({ name: 'Tag: Massively Multiplayer', val: -0.40 });
+      }
+      if (selectedTags.has('Discount')) {
+        logOdds += 0.15;
+        factors.push({ name: 'Discount Active', val: 0.15 });
+      }
+
+      // Sigmoid to probability
+      const prob = 1 / (1 + Math.exp(-logOdds));
+      const probPct = Math.min(99, Math.max(1, Math.round(prob * 100)));
+
+      const probDisplay = document.getElementById('prob-display');
+      const verdictDisplay = document.getElementById('verdict-display');
+
+      probDisplay.textContent = probPct + '%';
+
+      if (probPct >= 70) {
+        probDisplay.style.color = 'var(--accent)';
+        verdictDisplay.style.color = 'var(--accent)';
+        verdictDisplay.textContent = 'Likely High Rated (>70% Positive)';
+      } else {
+        probDisplay.style.color = 'var(--red)';
+        verdictDisplay.style.color = 'var(--red)';
+        verdictDisplay.textContent = 'At Risk of Mixed / Mixed-Negative (<70%)';
+      }
+
+      // Render factors
+      const factorList = document.getElementById('factor-list');
+      factorList.innerHTML = '';
+      factors.sort((a, b) => Math.abs(b.val) - Math.abs(a.val));
+      factors.slice(0, 4).forEach(f => {
+        const row = document.createElement('div');
+        row.className = 'factor-row';
+        const sign = f.val >= 0 ? '+' : '';
+        const colorClass = f.val >= 0 ? 'factor-pos' : 'factor-neg';
+        row.innerHTML = `<span>${f.name}</span><span class="${colorClass}">${sign}${f.val.toFixed(2)} SHAP</span>`;
+        factorList.appendChild(row);
+      });
+    }
+
+    // Initialize Simulator
+    updateSim();
+  </script>
+</body>
+</html>

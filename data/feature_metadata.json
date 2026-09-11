@@ -1,0 +1,189 @@
+{
+  "total_records": 2500,
+  "total_engineered_features": 474,
+  "selected_features_count": 60,
+  "selected_features": [
+    "log_ccu",
+    "initial_price",
+    "tag_Multiplayer",
+    "price_per_hour_playtime",
+    "tag_2D",
+    "price",
+    "tag_Massively_Multiplayer",
+    "genre_Indie",
+    "genre_Massively_Multiplayer",
+    "tag_PvP",
+    "is_free",
+    "log_owners",
+    "tag_Puzzle",
+    "tag_Indie",
+    "tag_Co_op",
+    "genre_count",
+    "tag_Open_World",
+    "tag_count",
+    "tag_Pixel_Graphics",
+    "tag_Great_Soundtrack",
+    "tag_Funny",
+    "tag_Early_Access",
+    "tag_Story_Rich",
+    "tag_FPS",
+    "tag_Difficult",
+    "tag_Classic",
+    "tag_Comedy",
+    "tag_MMORPG",
+    "tag_RPG",
+    "is_top_publisher",
+    "tag_Survival",
+    "genre_Free_To_Play",
+    "genre_RPG",
+    "genre_Action",
+    "tag_Free_to_Play",
+    "tag_Character_Customization",
+    "discount_percentage",
+    "tag_Crafting",
+    "tag_Online_Co_Op",
+    "tag_Sandbox",
+    "genre_Early_Access",
+    "tag_Military",
+    "tag_War",
+    "tag_Platformer",
+    "tag_Shooter",
+    "genre_Casual",
+    "tag_Realistic",
+    "tag_Atmospheric",
+    "tag_Action",
+    "tag_Adventure",
+    "tag_Choices_Matter",
+    "tag_Historical",
+    "tag_Psychological_Horror",
+    "tag_Point_&_Click",
+    "tag_Family_Friendly",
+    "tag_Moddable",
+    "genre_Adventure",
+    "tag_Colorful",
+    "tag_Violent",
+    "tag_Horror"
+  ],
+  "feature_importances_top30": [
+    {
+      "feature": "log_ccu",
+      "importance": 0.057500911715236344
+    },
+    {
+      "feature": "initial_price",
+      "importance": 0.045668398199086406
+    },
+    {
+      "feature": "tag_Multiplayer",
+      "importance": 0.042969875059077414
+    },
+    {
+      "feature": "price_per_hour_playtime",
+      "importance": 0.039560975164878574
+    },
+    {
+      "feature": "tag_2D",
+      "importance": 0.036008519623814426
+    },
+    {
+      "feature": "price",
+      "importance": 0.03567628025919819
+    },
+    {
+      "feature": "tag_Massively_Multiplayer",
+      "importance": 0.023532075107023747
+    },
+    {
+      "feature": "genre_Indie",
+      "importance": 0.022265237064936598
+    },
+    {
+      "feature": "genre_Massively_Multiplayer",
+      "importance": 0.022245042395399758
+    },
+    {
+      "feature": "tag_PvP",
+      "importance": 0.019998246701282394
+    },
+    {
+      "feature": "is_free",
+      "importance": 0.019802891614660156
+    },
+    {
+      "feature": "log_owners",
+      "importance": 0.01880093065151984
+    },
+    {
+      "feature": "tag_Puzzle",
+      "importance": 0.01692355942012924
+    },
+    {
+      "feature": "tag_Indie",
+      "importance": 0.01574887775643
+    },
+    {
+      "feature": "tag_Co_op",
+      "importance": 0.014970622624647892
+    },
+    {
+      "feature": "genre_count",
+      "importance": 0.014368744936932637
+    },
+    {
+      "feature": "tag_Open_World",
+      "importance": 0.013961772467607988
+    },
+    {
+      "feature": "tag_count",
+      "importance": 0.012983777743631547
+    },
+    {
+      "feature": "tag_Pixel_Graphics",
+      "importance": 0.012298824845650473
+    },
+    {
+      "feature": "tag_Great_Soundtrack",
+      "importance": 0.010960906636227095
+    },
+    {
+      "feature": "tag_Funny",
+      "importance": 0.009923165789443689
+    },
+    {
+      "feature": "tag_Early_Access",
+      "importance": 0.009745554503802826
+    },
+    {
+      "feature": "tag_Story_Rich",
+      "importance": 0.007820191255715203
+    },
+    {
+      "feature": "tag_FPS",
+      "importance": 0.007346774802688326
+    },
+    {
+      "feature": "tag_Difficult",
+      "importance": 0.007214319346982748
+    },
+    {
+      "feature": "tag_Classic",
+      "importance": 0.007176385377566382
+    },
+    {
+      "feature": "tag_Comedy",
+      "importance": 0.007051801133332619
+    },
+    {
+      "feature": "tag_MMORPG",
+      "importance": 0.00700398632613289
+    },
+    {
+      "feature": "tag_RPG",
+      "importance": 0.006999510177312139
+    },
+    {
+      "feature": "is_top_publisher",
+      "importance": 0.006800129323179339
+    }
+  ]
+}
